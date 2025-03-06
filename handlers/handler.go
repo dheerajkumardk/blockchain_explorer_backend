@@ -124,6 +124,45 @@ func AccountTransactions(c *fiber.Ctx) error {
 	return c.JSON(transactions)
 }
 
+func GetAllWithdrawals(c *fiber.Ctx) error {
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Datbase is not initialised",
+		})
+	}
+	var withdrawals []database.Withdrawal
+	if err := db.Find(&withdrawals).Error; err != nil {
+		c.Status(500).JSON(fiber.Map{
+			"error": "Error retreiving withdrawals",
+		})
+	}
+	if len(withdrawals) == 0 {
+		c.Status(500).Send([]byte("No withdrawals found"))
+	}
+	return c.JSON(withdrawals)
+}
+
+func GetWithdrawalInfo(c *fiber.Ctx) error {
+	index := c.Params("index")
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Datbase is not initialised",
+		})
+	}
+	var withdrawal database.Withdrawal
+	if err := db.Find(&withdrawal, "index = ?", index).Error; err != nil {
+		c.Status(500).JSON(fiber.Map{
+			"error": "Error retreiving withdrawal info",
+		})
+	}
+	if withdrawal.Index == 0 {
+		c.Status(500).Send([]byte("Withdrawal for given index not found"))
+	}
+	return c.JSON(withdrawal)
+}
+
 func GetAccountInfo(c *fiber.Ctx) error {
 	address := c.Params("address")
 	db := database.BlockDB
