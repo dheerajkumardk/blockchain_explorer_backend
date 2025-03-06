@@ -65,3 +65,42 @@ func GetBlockTransactions(c *fiber.Ctx) error {
 	return c.JSON(transactions)
 }
 
+func GetAllTransactions(c *fiber.Ctx) error {
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Database is not initialized",
+		})
+	}
+	var transactions []database.Transaction
+	if err := db.Find(&transactions).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Error retrieving transactions",
+		})
+	}
+	if len(transactions) == 0 {
+		c.Status(500).Send([]byte("No transactions found"))
+	}
+	return c.JSON(transactions)
+}
+
+func GetTransactionInfo(c *fiber.Ctx) error {
+	txHash := c.Params("txHash")
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Database is not initialised",
+		})
+	}
+	var transaction database.Transaction
+	if err := db.Find(&transaction, "tx_hash = ?", txHash).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Error retrieving transaction Info",
+		})
+	}
+	if transaction.BlockNumber == 0 {
+		c.Status(500).Send([]byte("No transaction found for given hash"))
+	}
+	return c.JSON(transaction)
+}
+
