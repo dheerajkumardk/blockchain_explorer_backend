@@ -104,3 +104,63 @@ func GetTransactionInfo(c *fiber.Ctx) error {
 	return c.JSON(transaction)
 }
 
+func AccountTransactions(c *fiber.Ctx) error {
+	address := c.Params("address")
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Datbase is not initialised",
+		})
+	}
+	var transactions []database.Transaction
+	if err := db.Find(&transactions, "from = ?", address).Error; err != nil {
+		c.Status(500).JSON(fiber.Map{
+			"error": "Error retreiving txns for given address",
+		})
+	}
+	if len(transactions) == 0 {
+		c.Status(500).Send([]byte("No transaction found for given address"))
+	}
+	return c.JSON(transactions)
+}
+
+func GetAccountInfo(c *fiber.Ctx) error {
+	address := c.Params("address")
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Datbase is not initialised",
+		})
+	}
+	var account database.Account
+	if err := db.Find(&account, "address = ?", address).Error; err != nil {
+		c.Status(500).JSON(fiber.Map{
+			"error": "Error retreiving txns for given address",
+		})
+	}
+	if account.Address == "" {
+		c.Status(500).Send([]byte("No info found for given address"))
+	}
+	return c.JSON(account)
+}
+
+func GetAccountBalance(c *fiber.Ctx) error {
+	address := c.Params("address")
+	db := database.BlockDB
+	if db == nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Datbase is not initialised",
+		})
+	}
+	var account database.Account
+	if err := db.Find(&account, "address = ?", address).Error; err != nil {
+		c.Status(500).JSON(fiber.Map{
+			"error": "Error retreiving txns for given address",
+		})
+	}
+	if account.Address == "" {
+		c.Status(500).Send([]byte("No info found for given address"))
+	}
+	return c.JSON(account.ETHBalance)
+}
+
