@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/dheerajkumardk/blockchain_explorer_backend/database"
 	"github.com/gofiber/fiber/v2"
 )
@@ -44,7 +47,8 @@ func GetBlockByBlockNumber(c *fiber.Ctx) error {
 }
 
 func GetBlockTransactions(c *fiber.Ctx) error {
-	blockNumber := c.Params("blockNumber")
+	blockNumber, _ := strconv.ParseUint(c.Params("blockNumber"), 10, 64)
+
 	db := database.BlockDB
 	if db == nil {
 		return c.Status(500).JSON(fiber.Map{
