@@ -2,6 +2,7 @@ package listener
 
 import (
 	"context"
+	"fmt"
 	_ "fmt"
 	"log"
 	"os"
@@ -99,12 +100,20 @@ func SubscribeBlocks() {
 
 			// transactions
 			for _, tx := range block.Transactions() {
+				// to handle nil on contract creation txn
+				var toAddress string
+				if tx.To() == nil {
+					toAddress = "0x0"
+					fmt.Println("Contract creation txn: ", tx.Hash().String())
+				} else {
+					toAddress = tx.To().String()
+				}
 				// create txn obj to insert into db
 				newTxn := database.Transaction{
 					TxHash:      tx.Hash().String(),
 					BlockNumber: block.Number().Uint64(),
 					From:        "",
-					To:          tx.To().String(),
+					To:          toAddress,
 					Value:       tx.Value().String(),
 					TxnFees:     "",
 					Timestamp:   uint64(tx.Time().Unix()),
