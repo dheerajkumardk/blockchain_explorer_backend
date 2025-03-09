@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/dheerajkumardk/blockchain_explorer_backend/database"
 	"github.com/gofiber/fiber/v2"
 )
@@ -203,3 +201,7 @@ func GetAccountBalance(c *fiber.Ctx) error {
 	return c.JSON(account.ETHBalance)
 }
 
+
+// Search endpoints
+
+// Not exposing post End-points

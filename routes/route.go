@@ -39,7 +39,7 @@ func SetupRoutes(app *fiber.App) {
 
 	// Search End-points
 	// Search for blocks (blockNumber), transactions(txnHash), or accounts(Address)
-	app.Get("/search")
+	// app.Get("/search")
 
 	// Post a new block
 	// app.Post("/blocks")
