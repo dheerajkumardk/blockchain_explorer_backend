@@ -14,7 +14,7 @@ func InitDatabase() {
 	// 1. We need GORM and db drivers
 	// 2. Connect to the db using Gorm's Open Method
 	var err error
-	BlockDB, err := gorm.Open(sqlite.Open("blockchain.db"))
+	BlockDB, err = gorm.Open(sqlite.Open("blockchain.db"))
 	if err != nil {
 		panic("failed to connect to the database")
 	}
