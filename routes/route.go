@@ -41,12 +41,4 @@ func SetupRoutes(app *fiber.App) {
 	// Search for blocks (blockNumber), transactions(txnHash), or accounts(Address)
 	// app.Get("/search")
 
-	// Post a new block
-	// app.Post("/blocks")
-
-	// Post a new transaction
-	// app.Post("/transactions")
-
-	// Post a new withdrawl
-	// app.Post("/withdrawals")
 }

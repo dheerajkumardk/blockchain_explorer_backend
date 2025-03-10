@@ -3,7 +3,6 @@ package listener
 import (
 	"context"
 	"fmt"
-	_ "fmt"
 	"log"
 	"os"
 
@@ -68,9 +67,8 @@ func SubscribeBlocks() {
 			db := database.BlockDB
 			if db == nil {
 				log.Print("DB is nil")
-			} else {
-				log.Print("All OK!")
 			}
+
 			// insert block into db
 			result := db.Create(&newBlock)
 			if result.Error != nil {
@@ -80,26 +78,12 @@ func SubscribeBlocks() {
 			}
 
 			// console log the data
-			// fmt.Println("block Number: ", block.Number().Int64())
 			// fmt.Println("BlockHash: ", block.Hash().String())
-			// fmt.Println("Timestamp: ", header.Time)
-			// fmt.Println("Proposed On: ")
-			// fmt.Println("Transactions: ", block.Transactions())
-			// fmt.Println("Withdrawals: ", block.Withdrawals())
-			// fmt.Println("Fee Recipient", header.Coinbase)
-			// fmt.Println("Block Reward")
-			// fmt.Println("Total Difficulty", header.Difficulty)
-			// fmt.Println("Size", block.Size())
 			// fmt.Println("GasUsed", header.GasUsed)
 			// fmt.Println("Gas Limit", header.GasLimit)
 			// fmt.Println("BaseFeePerGas", header.BaseFee)
 			// fmt.Println("BurntFees", uint64(header.BaseFee.Int64())+header.GasUsed)
 			// fmt.Println("Extra Data", header.Extra)
-			// fmt.Println("Hash", block.Hash().String())
-			// fmt.Println("Parent Hash", header.ParentHash)
-			// fmt.Println("StateRoot", header.Root)
-			// fmt.Println("WithdrawalsRoot", header.WithdrawalsHash)
-			// fmt.Println("Nonce", header.Nonce.Uint64())
 
 			// transactions
 			for _, tx := range block.Transactions() {
@@ -133,10 +117,7 @@ func SubscribeBlocks() {
 					log.Printf("Failed to store txn %s", tx.Hash().String())
 				}
 
-				// fmt.Println("txn: ", index)
 				// fmt.Println("hash: ", tx.Hash().String())
-				// fmt.Println("time: ", tx.Time())
-				// fmt.Println("value ", tx.Value().String())
 				// fmt.Println("gas ", tx.Gas())
 				// fmt.Println("gas price ", tx.GasPrice().Uint64())
 
