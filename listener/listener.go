@@ -8,9 +8,12 @@ import (
 	"os"
 
 	"github.com/dheerajkumardk/blockchain_explorer_backend/database"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
 
 func SubscribeBlocks() {
@@ -100,20 +103,26 @@ func SubscribeBlocks() {
 
 			// transactions
 			for _, tx := range block.Transactions() {
+				// get from address
+				from, err := types.Sender(types.LatestSignerForChainID(tx.ChainId()), tx)
+				if err != nil {
+					fmt.Println("Failed to get `from` address", err)
+				}
+
 				// to handle nil on contract creation txn
-				var toAddress string
+				var toAddress common.Address
 				if tx.To() == nil {
-					toAddress = "0x0"
-					fmt.Println("Contract creation txn: ", tx.Hash().String())
+					toAddress = crypto.CreateAddress(from, tx.Nonce())
+					fmt.Println("Contract creation txn: ", tx.Hash().String(), " :: toAddress -> ", toAddress.String())
 				} else {
-					toAddress = tx.To().String()
+					toAddress = *tx.To()
 				}
 				// create txn obj to insert into db
 				newTxn := database.Transaction{
 					TxHash:      tx.Hash().String(),
 					BlockNumber: block.Number().Uint64(),
-					From:        "",
-					To:          toAddress,
+					From:        from.String(),
+					To:          toAddress.String(),
 					Value:       tx.Value().String(),
 					TxnFees:     "",
 					Timestamp:   uint64(tx.Time().Unix()),
@@ -130,11 +139,21 @@ func SubscribeBlocks() {
 				// fmt.Println("value ", tx.Value().String())
 				// fmt.Println("gas ", tx.Gas())
 				// fmt.Println("gas price ", tx.GasPrice().Uint64())
-				// fmt.Println("nonce ", tx.Nonce())
-				// fmt.Println("Data ", tx.Data())
-				// fmt.Println("to", tx.To())
 
-				// fmt.Println()
+				// Account
+				// Update sender account, always update nonce for EOA
+				if err := updateOrCreateAccount(client, db, from, true); err != nil {
+					log.Printf("Failed to update sender account %s: %v\n", from.String(), err)
+					continue
+				}
+
+				// Update receiver account, if not a contract
+				if tx.To() != nil {
+					if err := updateOrCreateAccount(client, db, *tx.To(), false); err != nil {
+						log.Printf("Failed to update receiver account %s: %v", tx.To().String(), err)
+						continue
+					}
+				}
 			}
 
 			// withdrawals
@@ -157,4 +176,52 @@ func SubscribeBlocks() {
 
 		}
 	}
+}
+
+func isContractAddress(client *ethclient.Client, address common.Address) (bool, error) {
+	bytecode, err := client.CodeAt(context.Background(), address, nil)
+	if err != nil {
+		return false, err
+	}
+	return len(bytecode) > 0, nil
+}
+
+func updateOrCreateAccount(client *ethclient.Client, db *gorm.DB, address common.Address, updateNonce bool) error {
+	// fetch latest eth balance
+	balance, err := client.BalanceAt(context.Background(), address, nil)
+	if err != nil {
+		return err
+	}
+
+	// fetch nonce, only for EOA
+	var nonce uint64
+	if updateNonce {
+		nonce, err = client.NonceAt(context.Background(), address, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	// check if an EOA or a contract
+	isContract, err := isContractAddress(client, address)
+	if err != nil {
+		return err
+	}
+	// determine address type
+	addressType := "EOA"
+	if isContract {
+		addressType = "Contract"
+	}
+
+	account := database.Account{
+		Address:     address.String(),
+		AddressType: addressType,
+		ETHBalance:  balance.String(),
+		Nonce:       nonce,
+	}
+	// Create/Update the account in the database
+	if err := db.Where(database.Account{Address: address.String()}).Assign(account).FirstOrCreate(&account).Error; err != nil {
+		return err
+	}
+	return nil
 }

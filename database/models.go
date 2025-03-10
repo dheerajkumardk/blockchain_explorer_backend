@@ -47,7 +47,8 @@ type Withdrawal struct {
 // Struct to store account data in db
 type Account struct {
 	gorm.Model
-	Address    string `json:"address"`
-	ETHBalance string `json:"ethBalance"`
-	Nonce      uint64 `json:"nonce"`
+	Address     string `json:"address"`
+	AddressType string `json:"addressType"`
+	ETHBalance  string `json:"ethBalance"`
+	Nonce       uint64 `json:"nonce"`
 }

@@ -177,12 +177,12 @@ func GetAccountInfo(c *fiber.Ctx) error {
 	}
 	var account database.Account
 	if err := db.Find(&account, "address = ?", address).Error; err != nil {
-		c.Status(500).JSON(fiber.Map{
+		return c.Status(500).JSON(fiber.Map{
 			"error": "Error retreiving txns for given address",
 		})
 	}
 	if account.Address == "" {
-		c.Status(500).Send([]byte("No info found for given address"))
+		return c.Status(500).Send([]byte("No info found for given address"))
 	}
 	return c.JSON(account)
 }
@@ -197,7 +197,7 @@ func GetAccountBalance(c *fiber.Ctx) error {
 	}
 	var account database.Account
 	if err := db.Find(&account, "address = ?", address).Error; err != nil {
-		c.Status(500).JSON(fiber.Map{
+		return c.Status(500).JSON(fiber.Map{
 			"error": "Error retreiving txns for given address",
 		})
 	}
