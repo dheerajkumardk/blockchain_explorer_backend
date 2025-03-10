@@ -146,7 +146,7 @@ func GetAllWithdrawals(c *fiber.Ctx) error {
 }
 
 func GetWithdrawalInfo(c *fiber.Ctx) error {
-	index := c.Params("index")
+	index, _ := strconv.ParseUint(c.Params("index"), 10, 64)
 	db := database.BlockDB
 	if db == nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -154,13 +154,15 @@ func GetWithdrawalInfo(c *fiber.Ctx) error {
 		})
 	}
 	var withdrawal database.Withdrawal
-	if err := db.Find(&withdrawal, "index = ?", index).Error; err != nil {
-		c.Status(500).JSON(fiber.Map{
+	if err := db.Find(&withdrawal, "`index` = ?", index).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{
 			"error": "Error retreiving withdrawal info",
 		})
 	}
+	fmt.Println("Index -> ", index)
+	fmt.Println("Withdrawal -> ", withdrawal)
 	if withdrawal.Index == 0 {
-		c.Status(500).Send([]byte("Withdrawal for given index not found"))
+		return c.Status(500).Send([]byte("Withdrawal for given index not found"))
 	}
 	return c.JSON(withdrawal)
 }
