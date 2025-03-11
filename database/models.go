@@ -52,3 +52,11 @@ type Account struct {
 	ETHBalance  string `json:"ethBalance"`
 	Nonce       uint64 `json:"nonce"`
 }
+
+// Struct to store account address & transaction hash
+type AccountTransaction struct {
+	gorm.Model
+	Address string `json:"address"`
+	TxHash  string `json:"string"`
+	Role string `json:"role"`
+}

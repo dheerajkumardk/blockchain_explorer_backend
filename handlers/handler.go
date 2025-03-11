@@ -18,7 +18,7 @@ func GetAllBlocks(c *fiber.Ctx) error {
 	var blocks []database.Block
 	if err := db.Find(&blocks).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Error retrieving blocks",
+			"error":   "Error retrieving blocks",
 			"details": err.Error(),
 		})
 	}
@@ -36,7 +36,7 @@ func GetBlockByBlockNumber(c *fiber.Ctx) error {
 	var block database.Block
 	if err := db.Find(&block, "block_number = ?", blockNumber).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{
-			"error": "Error retrieving block",
+			"error":   "Error retrieving block",
 			"details": err.Error(),
 		})
 	}
@@ -108,21 +108,25 @@ func GetTransactionInfo(c *fiber.Ctx) error {
 
 func AccountTransactions(c *fiber.Ctx) error {
 	address := c.Params("address")
+	var transactions []database.Transaction
+
+	// find the account by address
+	var account database.Account
 	db := database.BlockDB
 	if db == nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Datbase is not initialised",
 		})
 	}
-	var transactions []database.Transaction
-	if err := db.Find(&transactions, "from = ?", address).Error; err != nil {
-		c.Status(500).JSON(fiber.Map{
-			"error": "Error retreiving txns for given address",
-		})
+	if err := db.Where("address = ?", address).First(&account).Error; err != nil {
+		return err
 	}
-	if len(transactions) == 0 {
-		c.Status(500).Send([]byte("No transaction found for given address"))
+
+	// Find all txns linked to the account
+	if err := db.Joins("JOIN account_transactions ON account_transactions.tx_Hash = transactions.tx_Hash").Where("account_transactions.address = ?", account.Address).Find(&transactions).Error; err != nil {
+		return err
 	}
+
 	return c.JSON(transactions)
 }
 

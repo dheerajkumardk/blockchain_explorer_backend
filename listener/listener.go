@@ -135,6 +135,62 @@ func SubscribeBlocks() {
 						continue
 					}
 				}
+
+				// update AccountTransaction
+				// from -> sender
+				// to -> receiver
+				accountTransactionSender := database.AccountTransaction{
+					Address: from.String(),
+					TxHash: tx.Hash().String(),
+					Role: "sender",
+				}
+				accountTransactionReceiver := database.AccountTransaction{
+					Address: toAddress.String(),
+					TxHash: tx.Hash().String(),
+					Role: "receiver",
+				}
+				// insert txn into db
+				result = db.Create(&accountTransactionSender)
+				if result.Error != nil {
+					log.Printf("Failed to store accountTxn %s -> error: %v", tx.Hash().String(), result.Error)
+				}
+				// insert txn into db
+				result = db.Create(&accountTransactionReceiver)
+				if result.Error != nil {
+					log.Printf("Failed to store accountTxn %s -> error: %v", tx.Hash().String(), result.Error)
+				}
+
+				// INTERNAL TXNS
+				// Txn Receipt and Logs
+				receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("txHash: ", tx.Hash().String())
+				fmt.Println("Logs ---> ", receipt.Logs)
+				fmt.Println("Status: ", receipt.Status)
+
+				// Iterate over logs
+				for _, log := range receipt.Logs {
+					fmt.Println("Log -> ", log)
+					fmt.Println()
+					fmt.Println("Address: ", log.Address, "BlockHash: ", log.BlockHash, "BlockNumber: ", log.BlockNumber)
+					fmt.Println("Data: ", log.Data, "Index: ", log.Index, "Removed: ", log.Removed, "Topics: ", log.Topics)
+					fmt.Println("TxHash: ", log.TxHash, "TxIndex: ", log.TxIndex)
+				}
+				fmt.Println()
+
+
+				// Transaction Trace
+
+				var result interface{}
+				err = client.Client().Call(&result, "debug_traceTransaction", tx.Hash().Hex(),  map[string]interface{}{
+					"tracer": "callTracer",
+				})
+				if err != nil {
+					log.Fatalf("Error retrieving txn Trace: %v", err)
+				}
+				fmt.Println("\n\n")
 			}
 
 			// withdrawals

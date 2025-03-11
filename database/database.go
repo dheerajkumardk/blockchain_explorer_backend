@@ -21,7 +21,7 @@ func InitDatabase() {
 	fmt.Println("Database connected!")
 	// 3. Define models/structs for db schemas
 	// 4. AutoMigrate - Create/update dB schemas based on our models
-	err = BlockDB.AutoMigrate(&Block{}, &Transaction{}, &Withdrawal{}, &Account{})
+	err = BlockDB.AutoMigrate(&Block{}, &Transaction{}, &Withdrawal{}, &Account{}, &AccountTransaction{})
 	if err != nil {
 		panic("failed to migrate")
 	}

@@ -22,7 +22,7 @@ func SetupRoutes(app *fiber.App) {
 	// Retrieve txn info by hash
 	app.Get("/transactions/:txHash", handlers.GetTransactionInfo)
 
-	// Get all txns for an address - [TODO]
+	// Get all txns for an address
 	app.Get("/accounts/:address/transactions", handlers.AccountTransactions)
 
 	// Get all withdrawals
